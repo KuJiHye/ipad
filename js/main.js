@@ -69,13 +69,24 @@ searchShadowEl.addEventListener('click', function () {
 익명 함수로 실행하던 것을 아래와 같이 기명 함수로 실행 가능
 */
 searchStarterEl.addEventListener('click', showSearch);
+
+/*
 searchCloserEl.addEventListener('click', hideSearch);
+
+모바일 모드 검색 기능과의 충돌을 막기 위한 이벤트 버블링 방지
+*/
+searchCloserEl.addEventListener('click', function (event) {
+  event.stopPropagation();
+  hideSearch();
+});
+
 searchShadowEl.addEventListener('click', hideSearch);
 
 function showSearch() {
   headerEl.classList.add('searching');
 
-  document.documentElement.classList.add('fixed'); // documentElement : document의 최상위 요소인 HTML
+  // document.documentElement.classList.add('fixed'); documentElement : document의 최상위 요소인 HTML
+  stopScroll();
 
   headerMenuEls.reverse().forEach(function (el, index) { // reverse() : 배열의 순서 뒤집기
     el.style.transitionDelay = index * .4 / headerMenuEls.length + 's' // length : 배열의 개수
@@ -93,7 +104,8 @@ function showSearch() {
 function hideSearch() {
   headerEl.classList.remove('searching');
 
-  document.documentElement.classList.remove('fixed');
+  // document.documentElement.classList.remove('fixed');
+  playScroll();
   
   headerMenuEls.reverse().forEach(function (el, index) { 
     el.style.transitionDelay = index * .4 / headerMenuEls.length + 's'
@@ -105,6 +117,83 @@ function hideSearch() {
   searchDelayEls.reverse();
 
   searchInputEl.value = ''; // input에 입력된 값 초기화
+}
+
+function playScroll() {
+  document.documentElement.classList.remove('fixed');
+}
+
+function stopScroll() {
+  document.documentElement.classList.add('fixed');
+}
+
+
+/* HEADER / MENU - 모바일 */
+const menuStarterEl = document.querySelector('header .menu-starter');
+
+menuStarterEl.addEventListener('click', function () {
+  if (headerEl.classList.contains('menuing')) {
+    headerEl.classList.remove('menuing');
+    searchInputEl.value = '';
+    playScroll();
+  } else {
+    headerEl.classList.add('menuing');
+    stopScroll();
+  }
+});
+
+
+/* HEADER / SEARCH - 모바일 */
+const searchTextFieldEl = document.querySelector('header .textfield');
+const searchCancelEl = document.querySelector('header .search-canceler');
+
+searchTextFieldEl.addEventListener('click', function () {
+  headerEl.classList.add('searching--mobile');
+  searchInputEl.focus();
+});
+
+searchCancelEl.addEventListener('click', function () {
+  headerEl.classList.remove('searching--mobile');
+});
+
+
+/* 화면 크기 변동에 따른 기능 충돌을 막기 위한 최적화 */
+window.addEventListener('resize', function () { // resize : 화면 크기 변동
+  if (window.innerWidth <= 740) { // innerWidth : 화면의 가로 너비 정보
+    headerEl.classList.remove('searching');
+  } else {
+    headerEl.classList.remove('searching--mobile');
+  }
+});
+
+
+/* NAVIGATION - 모바일 */
+const navEl = document.querySelector('nav');
+const navMenuToggleEl = navEl.querySelector('.menu-toggler');
+const navMenuShadowEl = navEl.querySelector('.shadow');
+
+navMenuToggleEl.addEventListener('click', function () {
+  if (navEl.classList.contains('menuing')) {
+    hideNavMenu();
+  } else {
+    showNavMenu();
+  }
+});
+
+navEl.addEventListener('click', function (event) {
+  event.stopPropagation();
+});
+
+navMenuShadowEl.addEventListener('click', hideNavMenu);
+
+window.addEventListener('click', hideNavMenu);
+
+function showNavMenu() {
+  navEl.classList.add('menuing');
+}
+
+function hideNavMenu() {
+  navEl.classList.remove('menuing');
 }
 
 
@@ -202,6 +291,7 @@ navigations.forEach(function (nav) {
   mapEl.innerHTML = /* html */ `
     <h3>
       <span class="text">${nav.title}</span>
+      <span class="icon">+</span>
     </h3>
     <ul>
       ${mapList}
@@ -209,6 +299,18 @@ navigations.forEach(function (nav) {
   `;
 
   navigationsEl.append(mapEl);
+});
+
+
+/* FOOTER / NAVIGATIONS - 모바일 */
+const mapEls = document.querySelectorAll('footer .navigations .map');
+
+mapEls.forEach(function (el) {
+  const h3El = el.querySelector('h3');
+
+  h3El.addEventListener('click', function () {
+    el.classList.toggle('active'); // toggle() : 해당 클래스를 가지고 있으면 제거하고 가지고 있지 않으면 추가, add와 remove 메소드의 기능을 동시에 수행
+  });
 });
 
 
